@@ -1,0 +1,68 @@
+var SysID = 'a2bcb9b58709b558e1e833350cbb35dc';
+  function findStringDifference(str1, str2) {
+
+    
+    var lines1 = str1.trim().split('\n');
+    var lines2 = str2.trim().split('\n');
+    
+    var addedLines = lines2.filter(function(line) {
+
+            return lines1.indexOf(line) === -1;
+
+    });
+
+    var removedLines = lines1.filter(function(line) {
+
+        return lines2.indexOf(line) === -1;
+
+    });
+
+    return {
+        added: addedLines,
+        removed: removedLines
+    };
+}
+var string1;
+var string2;
+var gr = new GlideRecord('u_infra_use_cases');
+gr.get(SysID);
+gr.query();
+if(gr.next())
+{
+string1 = gr.u_previous_value;   // MC round 1
+//gs.log('String is '+ string1);
+string2 = gr.u_new_value;    // MC round 2
+}
+
+var diff = findStringDifference(string1, string2);
+var op = diff.added.join("\n").length;
+gs.log('length '+ op);
+var rov =  diff.removed.join("\n").length;
+gs.log('length remove '+ rov);
+if( op>0 && rov>0 )
+{
+gr.u_mc_issues = "Added lines:\n" + diff.added.join("\n") + "\n Removed Lines:\n" + diff.removed.join("\n");
+gr.update();
+}
+else if(op>0 && rov == 0)
+{
+gr.u_mc_issues = "Added Lines:\n" + diff.added.join("\n");
+gr.update();  
+gs.log('Value \n'+ gr.u_mc_issues);
+}
+else if(op == 0 && rov>0)
+{
+gr.u_mc_issues = "Removed Lines:\n" + diff.removed.join("\n");
+gr.update(); 
+}
+else{
+   
+    var added = gr.indexOf('Added lines:');
+    var re = gr.indexOf(' Removed Lines:');
+    var ar = [added,re];
+    gr.u_mc_issues = added.replace(ar ,"");
+    gr.update();
+    
+}
+
+//gs.log('Value \n'+ gr.u_mc_issues);
